@@ -1,0 +1,12 @@
+version: '3'
+services:
+  nike:
+    container_name: nike
+    tty: true
+    build:
+      context: .
+      dockerfile: ./env/Dockerfile
+    extra_hosts:  #m1 docker 에서 사용하는 옵션 m1 맥이 아닌 경우 코멘트 아웃 해주셔야 합니다.
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./:/home/nike/nike-shoes
