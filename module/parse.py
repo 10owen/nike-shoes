@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import requests
 
 url = "https://www.nike.com/kr/launch/?type=upcoming"
