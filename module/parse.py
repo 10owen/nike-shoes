@@ -1,20 +1,47 @@
 #!/usr/bin/python
 
-import requests
+def send_message(receivers):
+    # TODO : 모듈 분리할것
+    sender = os.getenv("SENDER_EMAIL")
+    sender_pw = os.getenv("SENDER_PW")
+
+    import smtplib
+    server = smtplib.SMTP( "smtp.gmail.com", 587 )
+    server.starttls()
+    server.login(sender, sender_pw)
+    from_mail = sender
+    body = 'https://www.nike.com/kr/launch/?type=upcoming'
+
+    for receiver in receivers:
+        to = receiver
+        message = ("From: %s\r\n" % from_mail + "To: %s\r\n" % to + "Subject: %s\r\n" % 'DRAW TIME!' + "\r\n" + body)
+        server.sendmail(from_mail, to, message)
+
+
 import os
 from datetime import datetime
+from pytz import timezone,utc
 # os.system('curl -s "https://www.nike.com/kr/launch/?type=upcoming"  > /tmp')
 os.system('curl -s "https://www.nike.com/kr/launch/?type=upcoming" | grep 응모 > /tmp/nike_temp.log')
 
 f = open('/tmp/nike_temp.log', 'r')
-month = datetime.now().month
-day = datetime.now().day
+# TODO : 나이키 드로우 특성상 10시에 드로우 하므로 우선순위가 떨어져 시간에 대한 검증은 하지 않는다 추후 리팩토링 때.. 
+now = datetime.now()
+kst = timezone('Asia/Seoul')
+now = datetime.utcnow()
+now = utc.localize(now).astimezone(kst)
+month = now.month
+day = now.day
+
+send_condition_satisfied = False
 
 while True:
     line = f.readline()
     if not line: break
     if "available-date-component" in line and "응모" in line:
-        print(line)
+        if "응모하기" in line:
+            send_condition_satisfied = True
+            break;
         line = line.strip()
         start = line.find(">")
         end = line.rfind("<")
@@ -25,7 +52,17 @@ while True:
         for di in draw_info:
             if "/" in di:
                 date_info = di.split("/")
-                if(int(date_info[0]) == month and int(date_info[1]) != day):
-                    print("bingo!!")
-        
+                if(int(date_info[0]) == month and int(date_info[1]) == day):
+                    # TODO : db에 저장할까?
+                    pass
 f.close()
+if send_condition_satisfied == True:
+    print('send message')
+    receivers = [
+        "zeros19861@gmail.com",
+        "racha2056@gmail.com",
+        # "zeros19861@gmail.com"
+    ]
+    send_message(receivers)
+    print('send message done')
+
