@@ -1,30 +1,14 @@
 #!/usr/bin/python
-
-def send_message(receivers):
-    # TODO : 모듈 분리할것
-    sender = os.getenv("SENDER_EMAIL")
-    sender_pw = os.getenv("SENDER_PW")
-
-    import smtplib
-    server = smtplib.SMTP( "smtp.gmail.com", 587 )
-    server.starttls()
-    server.login(sender, sender_pw)
-    from_mail = sender
-    body = 'https://www.nike.com/kr/launch/?type=upcoming'
-
-    for receiver in receivers:
-        to = receiver
-        message = ("From: %s\r\n" % from_mail + "To: %s\r\n" % to + "Subject: %s\r\n" % 'DRAW TIME!' + "\r\n" + body)
-        server.sendmail(from_mail, to, message)
-
-
 import os
 from datetime import datetime
 from pytz import timezone,utc
-# os.system('curl -s "https://www.nike.com/kr/launch/?type=upcoming"  > /tmp')
+from mailer import Mailer
+
 os.system('curl -s "https://www.nike.com/kr/launch/?type=upcoming" | grep 응모 > /tmp/nike_temp.log')
 
 f = open('/tmp/nike_temp.log', 'r')
+mailer = Mailer()
+
 # TODO : 나이키 드로우 특성상 10시에 드로우 하므로 우선순위가 떨어져 시간에 대한 검증은 하지 않는다 추후 리팩토링 때.. 
 now = datetime.now()
 kst = timezone('Asia/Seoul')
@@ -56,13 +40,12 @@ while True:
                     # TODO : db에 저장할까?
                     pass
 f.close()
+
 if send_condition_satisfied == True:
     print('send message')
     receivers = [
-        "zeros19861@gmail.com",
-        "racha2056@gmail.com",
-        # "zeros19861@gmail.com"
+        # set mail receivers mail addresses here
     ]
-    send_message(receivers)
+    mailer.send_message(receivers)
     print('send message done')
 
